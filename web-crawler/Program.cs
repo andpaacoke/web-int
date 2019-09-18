@@ -6,7 +6,9 @@ namespace web_crawler
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            WebCrawler wb = new WebCrawler("dr.dk");
+
+            wb.StartCrawlerAsync().Wait();
         }
     }
 }

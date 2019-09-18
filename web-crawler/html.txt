@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<!--[if lt IE 7 ]> <html lang="da" class="ie ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="da" class="ie ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="da" class="ie ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="da" class="ie ie9"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!--> <html lang="da"> <!--<![endif]-->
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" >
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title> søg på dr.dk</title>
+        <link rel="shortcut icon" type="image/png" href="/favicon.ico"/>
+
+        <!--[if (lt IE 9)&(!IEMobile 7)]>
+            <link rel="stylesheet" href="/assets/css/005/base-static.css" media="screen"/>
+        <![endif]-->
+        <![if gte IE 9]>
+            <link rel="stylesheet" href="/assets/css/005/base.css" media="screen"/>
+        <![endif]>
+        <link rel="stylesheet" href="/assets/css/005/print.css" media="print"/>
+
+        <link href="/search/Content/css?v=nnIHtkuEylksUAs-T6CJaORj69StUUDkyVB-RfvAcZg1" rel="stylesheet"/>
+
+
+        <script src="/assets/js/004/base.js"></script>
+
+        <link rel="search" type="application/opensearchdescription+xml" href="/search/opensearch.xml" title="dr.dk" />
+
+        <script type="text/javascript">
+            window.appDomainVirtualPath = "/search";
+        </script>
+        <script src="//www.dr.dk/global-navigation/topbarbundle.js"></script>
+    </head>
+<body>
+    <div class="site-wrapper">
+        
+
+<div class="site-content">
+
+    <div class="site-id">
+        <h1>Søg på dr.dk</h1>
+    </div>
+
+    <div class="row">
+        <form class="boxed" id="topForm" onsubmit="if(document.getElementById('searchInput').value == '')return false; else return true;">
+            <label class="dr-form-input" id="searchLabel">
+                <span>Søg på dr.dk</span>
+                                
+                <input type="text" name="query" class="searchInput" id="searchInput" value="" autocomplete="off"/>   
+                <button type="reset" id="resetButton" class="dr-icon-close-medium-boxed resetButton" title="Slet"></button>
+                <button type="submit" class="searchButton dr-icon-search-large" value="" title="Søg"></button>
+                <ul id="resultlist" role="listbox" class="nosuggestions"></ul>
+            </label>
+        </form>
+
+    </div>
+</div>
+    </div>
+
+    <script type="text/javascript">
+        var searchSiteURL = '//appmanol21.dr.dk/search/';
+    </script>
+
+    <script src="/search/Content/js?v=JcedwxBFBtAqR6YTrHVDFjkCIHgtGkkzahK6RPSObBI1"></script>
+
+    
+        <script src="/drWebStat/drWebStat.js"></script>
+</body>
+</html>
+
+----------------------------------------------------
