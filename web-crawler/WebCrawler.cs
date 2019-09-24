@@ -4,18 +4,19 @@ using System.Linq;
 using System.Net.Http;
 using HtmlAgilityPack;
 using System.Threading.Tasks;
-using System.IO;
-using System.Threading;
 using System.Net;
+using System.Text;
 
 namespace web_crawler
 {
     public class WebCrawler
     {
         private string _seed { get; set; }
+        public List<Page> Pages { get; set; }
         public WebCrawler(string seed) {
             string url = String.Format("http://{0}", seed);
             _seed = url;
+            Pages = new List<Page>();
         }
 
         public async Task<string> StartCrawlerAsync()
@@ -25,44 +26,53 @@ namespace web_crawler
             var htmlDocument = new HtmlDocument();
             htmlDocument.LoadHtml(html);
             List<string> hrefs = new List<string>();
+            string formattedString = "";
 
 
-            for (int i = 0; i <= 5; i++)
+            while (Pages.Count < 1000)
             {
-
                 var links = htmlDocument.DocumentNode.SelectNodes("//a[@href]");
+                hrefs = new List<string>();
                 foreach (HtmlNode hn in links)
                 {
-                    hrefs.Add(hn.Attributes["href"].Value);
+                    if (hn.Attributes["href"].Value.StartsWith("http"))
+                    {
+                        hrefs.Add(hn.Attributes["href"].Value);
+                    }
+                    else
+                    {
+                        // hrefs.Add(hn.Attributes["href"].Value)
+                        // var formattedString = String.Format("{0}{1}", _seed, href);
+                    }
                 }
+                Console.WriteLine("Loaded new href links!");
 
                 foreach (string href in hrefs)
                 {
-                    await Task.Delay(2000);
+                    await Task.Delay(100);
                     try
                     {
-                        if (href.StartsWith("http") || href.StartsWith("//www"))
-                        {
-                            html = await httpClient.GetStringAsync(href);
-                            htmlDocument.LoadHtml(html);
-                            
-                        }
-                        else
-                        {
-                            var formattedString = String.Format("{0}{1}", _seed, href);
-                            html = await httpClient.GetStringAsync(formattedString);
-                            htmlDocument.LoadHtml(html);
-                        }
-                        Console.WriteLine("Ez clap");
+                        Console.WriteLine(href);
+                        var response = await httpClient.GetByteArrayAsync(href);
+                        html = Encoding.Unicode.GetString(response, 0, response.Length - 1);
+                        htmlDocument.LoadHtml(html);
+                        Pages.Add(new Page(htmlDocument, href));
 
-                        using (System.IO.StreamWriter file =
+                        // Console.WriteLine("Ez clap");
+
+                        /*using (System.IO.StreamWriter file =
                        new System.IO.StreamWriter(Directory.GetCurrentDirectory() + "//html.txt"))
                         {
                             Console.WriteLine(href);
                             file.WriteLine(html);
                             file.WriteLine("----------------------------------------------------");
-                        }
+                        }*/
 
+                    }
+
+                    catch(AggregateException) {
+                        hrefs.Remove(href);
+                        continue;
                     }
 
                     catch (WebException ex)
@@ -77,17 +87,20 @@ namespace web_crawler
                         
                     }
 
-
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine(href);
+                        hrefs.Remove(href);
+                        continue;
+                    }
                 }
-
             }
-
             return html;
-
-            ParseRobotstxt(htmlDocument, "BingBangBot");
+            // ParseRobotstxt(htmlDocument, "BingBangBot");
 
         }
-        
+
 
         // Fra lektion 2
         private async void ParseRobotstxt(HtmlDocument htmlDocument, string botName)

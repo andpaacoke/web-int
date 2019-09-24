@@ -6,7 +6,7 @@ namespace web_crawler
     {
         static void Main(string[] args)
         {
-            WebCrawler wb = new WebCrawler("dr.dk");
+            WebCrawler wb = new WebCrawler("ekstrabladet.dk");
 
             wb.StartCrawlerAsync().Wait();
         }
