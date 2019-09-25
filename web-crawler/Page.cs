@@ -15,7 +15,7 @@ namespace web_crawler
             
             HtmlDoc = htmlDoc;
             Url = url;
-            Id = counter++;
+            Id = ++counter;
         }
     }
 }

@@ -6,6 +6,7 @@ using HtmlAgilityPack;
 using System.Threading.Tasks;
 using System.Net;
 using System.Text;
+using System.IO;
 
 namespace web_crawler
 {
@@ -25,49 +26,98 @@ namespace web_crawler
             var html = await httpClient.GetStringAsync(_seed);
             var htmlDocument = new HtmlDocument();
             htmlDocument.LoadHtml(html);
+            string baseUrl = new Uri(_seed).Host;
+            List<string> restrictions = await ParseRobotstxt(baseUrl, "BingBangBot");
             List<string> hrefs = new List<string>();
-            string formattedString = "";
+            List<string> UrlsToCrawl = new List<string>();
+            UrlsToCrawl.Add(new Uri(_seed).Host);
+            int UrlsToCrawlIndex = 1;
 
 
-            while (Pages.Count < 1000)
+            while (Pages.Count < 10)
             {
-                var links = htmlDocument.DocumentNode.SelectNodes("//a[@href]");
-                hrefs = new List<string>();
-                foreach (HtmlNode hn in links)
+                
+                for (; UrlsToCrawlIndex < UrlsToCrawl.Count; UrlsToCrawlIndex++)
                 {
-                    if (hn.Attributes["href"].Value.StartsWith("http"))
+                    try
                     {
-                        hrefs.Add(hn.Attributes["href"].Value);
+                        restrictions = await ParseRobotstxt(new Uri(UrlsToCrawl[UrlsToCrawlIndex]).Host, "BingBangBot");
+                        if (IsAllowedToCrawl(UrlsToCrawl[UrlsToCrawlIndex], restrictions))
+                        {
+                            html = await httpClient.GetStringAsync(UrlsToCrawl[UrlsToCrawlIndex]);
+                            htmlDocument.LoadHtml(html);
+                            UrlsToCrawlIndex++;
+                            break;
+                        }
+
                     }
-                    else
+                    catch(AggregateException) {
+                        hrefs.Remove(UrlsToCrawl[UrlsToCrawlIndex]);
+                        continue;
+                    }
+
+                    catch (WebException ex)
                     {
-                        // hrefs.Add(hn.Attributes["href"].Value)
-                        // var formattedString = String.Format("{0}{1}", _seed, href);
+                        Console.WriteLine(ex.Message);
+                        HttpWebResponse errorResponse = ex.Response as HttpWebResponse;
+                        if (errorResponse.StatusCode == HttpStatusCode.NotFound)
+                        {
+                            hrefs.Remove(UrlsToCrawl[UrlsToCrawlIndex]);
+                        }
+                    }
+
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine(UrlsToCrawl[UrlsToCrawlIndex]);
+                        continue;
                     }
                 }
-                Console.WriteLine("Loaded new href links!");
+
+                var links = htmlDocument.DocumentNode.SelectNodes("//a[@href]");
+                hrefs = new List<string>();
+                if (links != null)
+                {
+                    foreach (HtmlNode hn in links)
+                    {
+                        if (hn.Attributes["href"].Value.StartsWith("http"))
+                        {
+                            hrefs.Add(hn.Attributes["href"].Value);
+                        }
+                        else
+                        {
+                            // hrefs.Add(hn.Attributes["href"].Value)
+                            // var formattedString = String.Format("{0}{1}", _seed, href);
+                        }
+                    }
+                    Console.WriteLine("Loaded new href links!");
+                }
 
                 foreach (string href in hrefs)
                 {
-                    await Task.Delay(100);
                     try
                     {
                         Console.WriteLine(href);
-                        var response = await httpClient.GetByteArrayAsync(href);
-                        html = Encoding.Unicode.GetString(response, 0, response.Length - 1);
-                        htmlDocument.LoadHtml(html);
-                        Pages.Add(new Page(htmlDocument, href));
+                        string tempBaseUrl = new Uri(href).Host;
+                        if(tempBaseUrl.StartsWith("www.")) {
+                            tempBaseUrl = tempBaseUrl.Replace("www.", "");
+                        }
+                        if(baseUrl != tempBaseUrl) {
+                            baseUrl = tempBaseUrl;
+                            var formattedString = String.Format("{0}{1}", "https://", baseUrl);
+                            if(!UrlsToCrawl.Contains(formattedString)) {
+                                UrlsToCrawl.Add(formattedString);
+                            }
+                            restrictions = await ParseRobotstxt(baseUrl, "BingBangBot");
+                            
+                        }
 
-                        // Console.WriteLine("Ez clap");
-
-                        /*using (System.IO.StreamWriter file =
-                       new System.IO.StreamWriter(Directory.GetCurrentDirectory() + "//html.txt"))
+                        if (IsAllowedToCrawl(href, restrictions))
                         {
-                            Console.WriteLine(href);
-                            file.WriteLine(html);
-                            file.WriteLine("----------------------------------------------------");
-                        }*/
-
+                            html = await httpClient.GetStringAsync(href);
+                            htmlDocument.LoadHtml(html);
+                            Pages.Add(new Page(htmlDocument, href));
+                        }
                     }
 
                     catch(AggregateException) {
@@ -91,20 +141,61 @@ namespace web_crawler
                     {
                         Console.WriteLine(ex.Message);
                         Console.WriteLine(href);
-                        hrefs.Remove(href);
                         continue;
                     }
                 }
             }
-            return html;
-            // ParseRobotstxt(htmlDocument, "BingBangBot");
+            
+            WriteToFile();
 
+            return html;
+        }
+
+
+
+        private bool IsAllowedToCrawl(string url, List<string> restrictions) {
+            // First check for sites that are allowed
+            foreach(string rule in restrictions) {
+                if(rule.StartsWith("allow")) {
+                    var subString = rule.Substring(rule.LastIndexOf(':') + 1).Trim();
+                    if(subString.StartsWith('/')) {
+                        if(url.Contains(subString))  {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            // Check for sites that are disallowed
+            foreach(string rule in restrictions) {
+                if(rule.StartsWith("disallow")) {
+                    var subString = rule.Substring(rule.LastIndexOf(':') + 1).Trim();
+
+                    if(subString.StartsWith("/*")) {
+                        subString = subString.Substring(subString.LastIndexOf('*') + 1).Trim();
+                        if(url.EndsWith(subString))  {
+                            return false;
+                        }
+                    } else if(subString.StartsWith("/")) {
+                        if(url.Contains(subString))  {
+                            return false;
+                        }
+                    }        
+                }
+            }
+
+            return true;
         }
 
 
         // Fra lektion 2
-        private async void ParseRobotstxt(HtmlDocument htmlDocument, string botName)
+        private async Task<List<string>> ParseRobotstxt(string baseUrl, string botName)
         {
+            var robotsUrl = String.Format("http://{0}/robots.txt", baseUrl);
+            var httpClient = new HttpClient();
+            var html = await httpClient.GetStringAsync(robotsUrl);
+            var htmlDocument = new HtmlDocument();
+            htmlDocument.LoadHtml(html);
             var listOfRobotstxt = htmlDocument.Text.ToLower().Split("\n").ToList();
             List<string> restrictions = new List<string>();
 
@@ -120,10 +211,8 @@ namespace web_crawler
                     }
                 }
             }
-            foreach (var item in restrictions)
-            {
-                Console.WriteLine(item);
-            }
+
+            return restrictions;
         }
 
 
@@ -169,6 +258,44 @@ namespace web_crawler
             
             var simi =  (double) overlap.ToList().Count / (double)union.ToList().Count;
             return simi;
+        }
+
+
+        public List<Term> ParseText()
+        {
+            List<Term> terms = new List<Term>();
+            string[] lines = System.IO.File.ReadAllLines(Directory.GetCurrentDirectory() + "//html.txt");
+            int Id = 1;
+
+            foreach(string line in lines) {
+                if(line.StartsWith("Id: " + Id.ToString())) {
+                    Id++;
+                    continue;
+                }
+                string currentLine = line.Replace(".", " ").Replace(":", " ").Replace(",", " ").ToLower();
+                string[] lineSplit = currentLine.Split(" ");
+
+                foreach(string s in lineSplit) {
+                    if(!String.IsNullOrWhiteSpace(s)){
+                        terms.Add(new Term(s, Id - 1));
+                    }
+                }
+            }
+
+            return terms;
+
+        }
+
+        private void WriteToFile() {
+        using (System.IO.StreamWriter file =
+                new System.IO.StreamWriter(Directory.GetCurrentDirectory() + "//html.txt"))
+            {
+                foreach(Page p in Pages) {
+                    file.WriteLine("Id: " + p.Id + " Url: " + p.Url);
+                    file.WriteLine(p.HtmlDoc.DocumentNode.SelectSingleNode("//body").InnerText);
+                    file.WriteLine();
+                }
+            }
         }
     }
 }
