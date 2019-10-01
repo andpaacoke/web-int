@@ -8,7 +8,7 @@ namespace web_crawler
         {
             WebCrawler wb = new WebCrawler("bt.dk");
 
-            //wb.StartCrawlerAsync().Wait();
+            wb.StartCrawlerAsync().Wait();
 
             wb.ParseText();
         }
