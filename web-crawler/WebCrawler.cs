@@ -15,10 +15,29 @@ namespace web_crawler
     {
         private string _seed { get; set; }
         public List<Page> Pages { get; set; }
+        // How many times a term appear in total in all docs
+        public Dictionary<string, int> TermFrequency {get; set;}
+        // How many times each term appears per document
+        public List<Dictionary<string, int>> TermDocFrequency {get; set;}
+        // List of documents that contain the specific term
+        public Dictionary<string, List<int>> PostingList {get; set;}
+        // Count for how many different documents a term appears in
+        public Dictionary<string, int> DocumentFrequency {get; set;}
+        // A measure of the informativeness of the each term.
+        public Dictionary<string, double> InverseDocumentFrequency {get; set;}
+        public List<Dictionary<string, double>> TfIdfWeight {get; set;}
+
+        
         public WebCrawler(string seed) {
             string url = String.Format("http://{0}", seed);
             _seed = url;
             Pages = new List<Page>();
+            TermFrequency = new Dictionary<string, int>();
+            TermDocFrequency = new List<Dictionary<string, int>>();
+            PostingList = new Dictionary<string, List<int>>();
+            DocumentFrequency = new Dictionary<string, int>();
+            InverseDocumentFrequency = new Dictionary<string, double>();
+            TfIdfWeight = new List<Dictionary<string, double>>();
         }
 
         public async Task<string> StartCrawlerAsync()
@@ -109,12 +128,20 @@ namespace web_crawler
                             
                         }
 
+                        //IF we can crawl we store the pages html and url.
                         if (IsAllowedToCrawl(href, restrictions))
                         {
                             html = await httpClient.GetStringAsync(href);
                             htmlDocument.LoadHtml(html);
-                            //IF we can crawl we store the pages html and url.
-                            Pages.Add(new Page(htmlDocument, href));
+                            string parsedHtml = htmlDocument.DocumentNode.SelectSingleNode("//body").InnerText;
+                            parsedHtml = parsedHtml.Replace("\n", " ");
+                            // Removes ekstra whitespace
+                            parsedHtml = Regex.Replace(parsedHtml, @"\s+", " ");
+                            
+                            if(IsPageUnique(parsedHtml)) {
+                                Pages.Add(new Page(parsedHtml, href));
+                                Console.WriteLine("Added page number " + Pages.Count);
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -196,7 +223,7 @@ namespace web_crawler
 
 
         // Fra lektion 1
-        public void NearDuplicate(string stringOne, string stringTwo, int shingle){
+        private bool NearDuplicate(string stringOne, string stringTwo, int shingle){
 
             var stringOneWords = stringOne.Split();
             var stringTwoWords = stringTwo.Split();
@@ -226,11 +253,12 @@ namespace web_crawler
                 temp = "";
             }
 
-            Console.WriteLine(Jaccard(shingleSetOne.ToArray(), shingleSetTwo.ToArray()).ToString());
+            double jaccardValue= Jaccard(shingleSetOne.ToArray(), shingleSetTwo.ToArray());
+            return jaccardValue > 0.8 ? true : false;
         }
 
         // Fra lektion 1
-        public double Jaccard(string[] a, string[] b){
+        private double Jaccard(string[] a, string[] b){
 
             IEnumerable<string> union = a.Union(b);
             IEnumerable<string> overlap = a.Intersect(b);
@@ -239,11 +267,21 @@ namespace web_crawler
             return simi;
         }
 
+        private bool IsPageUnique(string parsedHtml)
+        {
+            foreach (Page p in Pages)
+            {
+                if(NearDuplicate(parsedHtml, p.Html, 4)) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
-        public Dictionary<string, int> ParseText()
+        public void ParseText()
         {
             List<Term> terms = new List<Term>();
-            Dictionary<string, int> docIdDictionary = new Dictionary<string, int>();
+            
             
             string[] lines = System.IO.File.ReadAllLines(Directory.GetCurrentDirectory() + "//html.txt");
             int Id = 1;
@@ -264,33 +302,139 @@ namespace web_crawler
             }
 
             var sortedTerms = terms.OrderBy(x => x.Word ).ThenBy(term => term.Id).ToList();
-            
-            for (int i = 0; i < sortedTerms.Count; i++) {
-                // If the dictionary contains the term, we want to increment for each document it appears on.
-                // We do this by comparing the id to the id of the previous element. If they differ we increment.
-                if (docIdDictionary.ContainsKey(sortedTerms[i].Word)) {
-                    if (sortedTerms[i].Id != sortedTerms[i-1].Id) {
-                        docIdDictionary[sortedTerms[i].Word]++;
-                    }
-                }
-                else {
-                    docIdDictionary.Add(sortedTerms[i].Word, 1);
-                }
-            }
 
-            return docIdDictionary;
+            PopulateOverallTermFrequency(sortedTerms);
+            PopulatePostingList(sortedTerms);
+            PopulateTermDocFrequency(sortedTerms);
+            PopulateDocumentFrequency(sortedTerms);
+            PopulateInverseDocumentFrequency();
+            CalculateTfIdfWeight();
 
         }
 
-        
+        private void PopulateDocumentFrequency(List<Term> sortedTerms) {
 
+            for (int i = 0; i < sortedTerms.Count; i++)
+            {
+                if(DocumentFrequency.ContainsKey(sortedTerms[i].Word)) {
+                    if (sortedTerms[i].Id == sortedTerms[i - 1].Id) {
+                        continue;
+                    }
+                    else {
+                        DocumentFrequency[sortedTerms[i].Word]++;
+                    }
+                }
+                else
+                {
+                    DocumentFrequency.Add(sortedTerms[i].Word, 1);
+                }
+            }
+        }
+
+        private void PopulateInverseDocumentFrequency(){
+            var docCount = GetDocCount();
+
+            foreach (KeyValuePair<string, int> entry in DocumentFrequency)
+            {
+                var initValue = docCount/entry.Value;
+                var idf = Math.Log10(initValue);
+                InverseDocumentFrequency.Add(entry.Key, idf);
+            }
+        }
+
+        private void PopulateOverallTermFrequency(List<Term> sortedTerms)
+        {
+            for (int i = 0; i < sortedTerms.Count; i++)
+            {
+                // If the dictionary contains the term, we want to increment for each document it appears on.
+                // We do this by comparing the id to the id of the previous element. If they differ we increment.
+                if (TermFrequency.ContainsKey(sortedTerms[i].Word))
+                {
+                    TermFrequency[sortedTerms[i].Word]++;
+                }
+                else
+                {
+                    TermFrequency.Add(sortedTerms[i].Word, 1);
+                }
+            }
+        }
+
+        private void PopulatePostingList(List<Term> sortedTerms)
+        {
+            for (int i = 0; i < sortedTerms.Count; i++)
+            {
+                if (PostingList.ContainsKey(sortedTerms[i].Word))
+                {
+                    if (!PostingList[sortedTerms[i].Word].Contains(sortedTerms[i].Id))
+                    {
+                        PostingList[sortedTerms[i].Word].Add(sortedTerms[i].Id);
+                    }
+                }
+                else
+                {
+                    PostingList.Add(sortedTerms[i].Word, new List<int>() { sortedTerms[i].Id });
+                }
+            }
+        }
+
+        private void PopulateTermDocFrequency(List<Term> sortedTerms) {
+            int docCount = GetDocCount();
+
+            for(int i = 0; i < docCount; i++) {
+                TermDocFrequency.Add(new Dictionary<string, int>());
+            }
+
+            for (int j = 0; j < sortedTerms.Count - 1; j++)
+            {
+                if(TermDocFrequency[sortedTerms[j].Id - 1].ContainsKey(sortedTerms[j].Word)){
+                    TermDocFrequency[sortedTerms[j].Id - 1][sortedTerms[j].Word]++;
+                } 
+                else {
+                    TermDocFrequency[sortedTerms[j].Id - 1].Add(sortedTerms[j].Word, 1);
+                }
+            }
+        }
+
+        private void CalculateTfIdfWeight()
+        {
+            int docCount = GetDocCount();
+
+            for(int i = 0; i < docCount; i++) {
+                TfIdfWeight.Add(new Dictionary<string, double>());
+            }
+
+            for (int i = 0; i < TermDocFrequency.Count - 1; i++)
+            {
+                foreach (KeyValuePair<string, int> entry in TermDocFrequency[i])
+                {
+                    var tfidf = entry.Value * InverseDocumentFrequency[entry.Key];
+                    TfIdfWeight[i].Add(entry.Key, tfidf);
+                }
+            }
+        }
+
+        private int GetDocCount () {
+            string[] lines = System.IO.File.ReadAllLines(Directory.GetCurrentDirectory() + "//html.txt");
+            var index = lines.Length - 1;
+
+            while(true) {
+                if(lines[index].StartsWith("Id: ")) {
+                    var lineSplit = lines[index].Split(" ");
+                    return Convert.ToInt32(lineSplit[1]);
+                }
+                else {
+                    index--;
+                }
+            }
+        }
+       
         private void WriteToFile() {
         using (System.IO.StreamWriter file =
                 new System.IO.StreamWriter(Directory.GetCurrentDirectory() + "//html.txt"))
             {
                 foreach(Page p in Pages) {
                     file.WriteLine("Id: " + p.Id + " Url: " + p.Url);
-                    file.WriteLine(p.HtmlDoc.DocumentNode.SelectSingleNode("//body").InnerText);
+                    file.WriteLine(p.Html);
                     file.WriteLine();
                 }
             }

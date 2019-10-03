@@ -6,11 +6,11 @@ namespace web_crawler
     {
         static void Main(string[] args)
         {
-            WebCrawler wb = new WebCrawler("bt.dk");
+            WebCrawler wc = new WebCrawler("bt.dk");
 
-            wb.StartCrawlerAsync().Wait();
+            // wb.StartCrawlerAsync().Wait();
 
-            wb.ParseText();
+            wc.ParseText();
         }
     }
 }

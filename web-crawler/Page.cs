@@ -5,15 +5,14 @@ namespace web_crawler
     public class Page
     {
         static int counter;
-        public HtmlDocument HtmlDoc { get; set; }
+        public string Html { get; set; }
         public int Id { get; set; }
-
         public string Url { get; set; }
 
 
-        public Page(HtmlDocument htmlDoc, string url) {
+        public Page(string html, string url) {
             
-            HtmlDoc = htmlDoc;
+            Html = html;
             Url = url;
             Id = ++counter;
         }
