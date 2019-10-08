@@ -26,6 +26,7 @@ namespace web_crawler
         // A measure of the informativeness of the each term.
         public Dictionary<string, double> InverseDocumentFrequency {get; set;}
         public List<Dictionary<string, double>> TfIdfWeight {get; set;}
+        public Dictionary<string, double> QueryTfIdfWeight {get; set;}
 
         
         public WebCrawler(string seed) {
@@ -38,6 +39,7 @@ namespace web_crawler
             DocumentFrequency = new Dictionary<string, int>();
             InverseDocumentFrequency = new Dictionary<string, double>();
             TfIdfWeight = new List<Dictionary<string, double>>();
+            QueryTfIdfWeight = new Dictionary<string, double>();
         }
 
         public async Task<string> StartCrawlerAsync()
@@ -402,7 +404,6 @@ namespace web_crawler
             for(int i = 0; i < docCount; i++) {
                 TfIdfWeight.Add(new Dictionary<string, double>());
             }
-
             for (int i = 0; i < TermDocFrequency.Count - 1; i++)
             {
                 foreach (KeyValuePair<string, int> entry in TermDocFrequency[i])
@@ -438,6 +439,34 @@ namespace web_crawler
                     file.WriteLine();
                 }
             }
+        }
+
+        private Dictionary<string, int> CalculateQueryTermFrequency(string userQuery) {
+            var splitQuery = userQuery.Split(" ");
+            Dictionary<string, int> queryTermFrequency = new Dictionary<string, int>();
+            foreach(string word in splitQuery) {
+                if(queryTermFrequency.ContainsKey(word)) {
+                    queryTermFrequency[word]++;
+                }
+                else {
+                    queryTermFrequency.Add(word, 1);
+                }
+            }
+            return queryTermFrequency;
+        }
+
+        private void CalculateQueryTfIdf(string userQuery)
+        {
+            var queryTermFrequency = CalculateQueryTermFrequency(userQuery);
+            foreach (KeyValuePair<string, int> entry in queryTermFrequency)
+            {
+                var tfidf = entry.Value * InverseDocumentFrequency[entry.Key];
+                QueryTfIdfWeight.Add(entry.Key, tfidf);
+            }
+        }
+
+        public void HandleUserQuery(string userQuery) {
+            CalculateQueryTfIdf(userQuery);
         }
     }
 }

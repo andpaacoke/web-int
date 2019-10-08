@@ -8,9 +8,15 @@ namespace web_crawler
         {
             WebCrawler wc = new WebCrawler("bt.dk");
 
-            // wb.StartCrawlerAsync().Wait();
+            //wc.StartCrawlerAsync().Wait();
 
             wc.ParseText();
+
+            Console.WriteLine("Please write a query: ");
+            string userQuery = Console.ReadLine();
+            wc.HandleUserQuery(userQuery);
+
+            
         }
     }
 }
