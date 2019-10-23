@@ -30,11 +30,8 @@ namespace web_crawler
         public Dictionary<string, double> InverseDocumentFrequency {get; set;}
         public List<Dictionary<string, double>> TfIdfWeight {get; set;}
         public Dictionary<string, double> QueryTfIdfWeight {get; set;}
-        public Dictionary<string, int> OutDegreePerPage {get; set;}
         public List<string> VisitedHrefs { get; set; }
-
-        private List<string> _fredesUrl = new List<string>();
-
+        public List<string> UrlsToVisit = new List<string>();
         public List<Dictionary<string, double>> NormalizedTfIdfDocumentVectors {get; set;}
 
         
@@ -48,131 +45,12 @@ namespace web_crawler
             InverseDocumentFrequency = new Dictionary<string, double>();
             TfIdfWeight = new List<Dictionary<string, double>>();
             QueryTfIdfWeight = new Dictionary<string, double>();
-            OutDegreePerPage = new Dictionary<string, int>();
+
             VisitedHrefs = new List<string>();
             NormalizedTfIdfDocumentVectors = new List<Dictionary<string, double>>();
         }
 
-        public async Task<string> StartCrawlerAsync()
-        {
-            // Loads initial html from the seed provided
-            var httpClient = new HttpClient();
-            var html = await httpClient.GetStringAsync(_seed);
-            var htmlDocument = new HtmlDocument();
-            htmlDocument.LoadHtml(html);
-
-            // Creates a baseUrl for comparison purposes for the queue so that we know to not enter that page again
-            string baseUrl = new Uri(_seed).Host;
-            List<string> restrictions = await ParseRobotstxt(baseUrl, "BingBangBot");
-            List<string> hrefs = new List<string>();
-
-            // When a new baseurl is encountered we add it to a list that should be crawled
-            List<string> UrlsToCrawl = new List<string>();
-
-            // seedUrl is added to list and we start index at 1 such that the loop will start from the next baseurl.
-            UrlsToCrawl.Add(new Uri(_seed).Host);
-            int UrlsToCrawlIndex = 1;
-
-
-            while (Pages.Count < 1000)
-            {
-                // This loop ensures that we traverse the list of baseUrls to crawl after we finished the seed. 
-                for (; UrlsToCrawlIndex < UrlsToCrawl.Count; UrlsToCrawlIndex++)
-                {
-                    try
-                    {
-                        restrictions = await ParseRobotstxt(new Uri(UrlsToCrawl[UrlsToCrawlIndex]).Host, "BingBangBot");
-                        if (IsAllowedToCrawl(UrlsToCrawl[UrlsToCrawlIndex], restrictions))
-                        {
-                            // If allowed to crawl the url we load the html and increment the list.
-                            html = await httpClient.GetStringAsync(UrlsToCrawl[UrlsToCrawlIndex]);
-                            htmlDocument.LoadHtml(html);
-                            UrlsToCrawlIndex++;
-                            break;
-                        }
-
-                    }
-                    catch (Exception ex)
-                    {
-                        // We will occasionally encounter exceptions such as when a url does not have a robots file. This continues.
-                        Console.WriteLine(ex.Message);
-                        Console.WriteLine(UrlsToCrawl[UrlsToCrawlIndex]);
-                        continue;
-                    }
-                }
-
-                // This finds all links in the html
-                var links = htmlDocument.DocumentNode.SelectNodes("//a[@href]");
-                hrefs = new List<string>();
-
-                //If we find links we go thorugh them and add the ones that are usable to a new list
-                if (links != null)
-                {
-                    foreach (HtmlNode hn in links)
-                    {
-                        if (hn.Attributes["href"].Value.StartsWith("http"))
-                        {
-                            hrefs.Add(hn.Attributes["href"].Value);
-                        }
-                    }
-                }
-
-
-                //FOr the loaded links we iterate through them all.
-                foreach (string href in hrefs)
-                {
-                    try
-                    {
-                        Console.WriteLine(href);
-
-                        //We make a tempUrl to compare our baseUrl with
-                        string tempBaseUrl = new Uri(href).Host;
-                        if(tempBaseUrl.StartsWith("www.")) {
-                            tempBaseUrl = tempBaseUrl.Replace("www.", "");
-                        }
-                        if(baseUrl != tempBaseUrl) {
-                            // If they differ we know we have encountered a new site. We then format the string to work, and add it to the list to be crawled.
-                            baseUrl = tempBaseUrl;
-                            var formattedString = String.Format("{0}{1}", "https://", baseUrl);
-
-                            if(!UrlsToCrawl.Contains(formattedString)) {
-                                UrlsToCrawl.Add(formattedString);
-                            }
-                            restrictions = await ParseRobotstxt(baseUrl, "BingBangBot");
-                            
-                        }
-
-                        //IF we can crawl we store the pages html and url.
-                        if (IsAllowedToCrawl(href, restrictions) && !VisitedHrefs.Contains(href))
-                        {
-                            html = await httpClient.GetStringAsync(href);
-                            htmlDocument.LoadHtml(html);
-                            string parsedHtml = htmlDocument.DocumentNode.SelectSingleNode("//body").InnerText;
-                            parsedHtml = parsedHtml.Replace("\n", " ");
-                            // Removes ekstra whitespace
-                            parsedHtml = Regex.Replace(parsedHtml, @"\s+", " ");
-                            
-                            if(IsPageUnique(parsedHtml)) {
-                                Pages.Add(new Page(parsedHtml, href, hrefs));
-                                Console.WriteLine("Added page number " + Pages.Count);
-                            }
-                        }
-                    }
-                    catch (NullReferenceException ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                        Console.WriteLine(href);
-                        continue;
-                    }
-
-                    VisitedHrefs.Add(href);
-                }
-            }
-            
-            WriteToFile();
-            return html;
-        }
-        public async Task StartCrawlerAsync2(){
+        public async Task StartCrawlerAsync(){
             var httpClient = new HttpClient();
             var html = await httpClient.GetStringAsync(_seed);
             var htmlDocument = new HtmlDocument();
@@ -185,15 +63,15 @@ namespace web_crawler
 
 
             // seedUrl is added to list and we start index at 1 such that the loop will start from the next baseurl.
-            _fredesUrl.Add(_seed);
+            UrlsToVisit.Add(_seed);
             int UrlsToCrawlIndex = 0;
 
             List<Task> tasks = new List<Task>();
             int threadsStarted = 0;
             while(Pages.Count < 1000 ){
-                if(_fredesUrl.Count > threadsStarted){
+                if(UrlsToVisit.Count > threadsStarted){
                     threadsStarted++;
-                    tasks.Add(Run(_fredesUrl[UrlsToCrawlIndex]));
+                    tasks.Add(Run(UrlsToVisit[UrlsToCrawlIndex]));
                     UrlsToCrawlIndex++;
                 }
             }
@@ -256,8 +134,8 @@ namespace web_crawler
                     }
                     try
                     {
-                        if(!_fredesUrl.Contains(href)) {
-                                _fredesUrl.Add(href);
+                        if(!UrlsToVisit.Contains(href)) {
+                                UrlsToVisit.Add(href);
                             }
                         //We make a tempUrl to compare our baseUrl with
                         string tempBaseUrl = new Uri(href).Host;
@@ -284,7 +162,13 @@ namespace web_crawler
                             if(Pages.Count > 1000) {
                                 return;
                             }
-                            if(IsPageUnique(parsedHtml)) {        
+                            if(IsPageUnique(parsedHtml)) {
+                                var pageLinks = htmlDocument.DocumentNode.SelectNodes("//a[@href]");
+                                List<string> OutDegreeLinks = new List<string>();
+                                foreach (HtmlNode hn in pageLinks)
+                                {
+                                    OutDegreeLinks.Add(hn.Attributes["href"].Value);
+                                }      
                                 Pages.Add(new Page(parsedHtml, href, hrefs));
                                 Console.WriteLine("Added page number " + Pages.Count);
                             }
@@ -464,9 +348,15 @@ namespace web_crawler
 
             // Logarithm applied on docfreq
             PopulateInverseDocumentFrequency();
+
+            //Calculates the tfIdf weights for the terms in the pages
             CalculateTfIdfWeight();
+
+            // Normalizes document vectors so they can be compared to the query
             NormaliseDocumentVectors();
 
+            ReadAllPages();
+            // GetSiteOutDegree();
         }
 
         private void PopulateDocumentFrequency(List<Term> sortedTerms) {
@@ -682,7 +572,6 @@ namespace web_crawler
         // We read all pages and add the top k results such that we have html to return
         private List<Page> TakeTopKResults(IOrderedEnumerable<KeyValuePair<int, double>> sortedCosineScore, int k) {
             var topKResults = sortedCosineScore.Take(k);
-            ReadAllPages();
             List<Page> topKPages = new List<Page>();
 
             foreach (var result in topKResults)
@@ -739,7 +628,7 @@ namespace web_crawler
 
             foreach (var item in topKPages)
             {
-                Console.WriteLine(item.Url);
+                Console.WriteLine("\n" + item.Url);
                 string[] htmlSplit = item.Html.Split(" ");
                 htmlSplit = htmlSplit.Except(englishStopWords).ToArray();
                 string text = "";
@@ -766,11 +655,20 @@ namespace web_crawler
             }
         }
 
-        private void GetSiteOutDegree(){
-            
-        }
+        private async void GetSiteOutDegree(){
+           
+            foreach (Page p in Pages)
+            {
+                var httpClient = new HttpClient();
+                var html = await httpClient.GetStringAsync(_seed);
+                var htmlDocument = new HtmlDocument();
+                htmlDocument.LoadHtml(html);
+                var links = htmlDocument.DocumentNode.SelectNodes("//a[@href]");
 
-
-        
+                foreach(HtmlNode hn in links) {
+                    p.OutDegreeLinks.Add(hn.Attributes["href"].Value);
+                }
+            }
+        }    
     }
 }
