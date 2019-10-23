@@ -6,7 +6,8 @@ namespace social_networks
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            FileReader fr = new FileReader();
+            fr.ReadFriendshipsFile();
         }
     }
 }

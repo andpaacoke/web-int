@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace social_networks
 {
@@ -20,7 +22,8 @@ namespace social_networks
             using (StreamReader reader = new StreamReader("friendships.txt"))
             {
                 var text = reader.ReadToEnd();
-                textSplit = text.Split(":");
+                textSplit = text.Split(new Char [] {':' , '\n' , '\r'});
+                textSplit = textSplit.Where(x => x != "").ToArray();
             }
 
             int i = 0;
@@ -31,7 +34,7 @@ namespace social_networks
                     i++;
                     if(textSplit[i] == "friends") {
                         i++;
-                        friends = textSplit[i].Split(" ");
+                        friends = textSplit[i].Trim().Split("\t");
                         i++;
                         users.Add(new User(name.ToLower(), new List<string>(friends)));
                     }
