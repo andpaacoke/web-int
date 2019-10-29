@@ -9,3 +9,14 @@ c:\Users\andreas\Desktop\7.semester\web-int\social-networks\obj\Debug\netcoreapp
 c:\Users\andreas\Desktop\7.semester\web-int\social-networks\obj\Debug\netcoreapp2.1\social-networks.AssemblyInfo.cs
 c:\Users\andreas\Desktop\7.semester\web-int\social-networks\obj\Debug\netcoreapp2.1\social-networks.dll
 c:\Users\andreas\Desktop\7.semester\web-int\social-networks\obj\Debug\netcoreapp2.1\social-networks.pdb
+C:\Users\and87\Desktop\Uni\7.semester\web-int\social-networks\obj\Debug\netcoreapp2.1\social-networks.csprojAssemblyReference.cache
+C:\Users\and87\Desktop\Uni\7.semester\web-int\social-networks\obj\Debug\netcoreapp2.1\social-networks.csproj.CoreCompileInputs.cache
+C:\Users\and87\Desktop\Uni\7.semester\web-int\social-networks\obj\Debug\netcoreapp2.1\social-networks.AssemblyInfoInputs.cache
+C:\Users\and87\Desktop\Uni\7.semester\web-int\social-networks\obj\Debug\netcoreapp2.1\social-networks.AssemblyInfo.cs
+C:\Users\and87\Desktop\Uni\7.semester\web-int\social-networks\bin\Debug\netcoreapp2.1\social-networks.deps.json
+C:\Users\and87\Desktop\Uni\7.semester\web-int\social-networks\bin\Debug\netcoreapp2.1\social-networks.runtimeconfig.json
+C:\Users\and87\Desktop\Uni\7.semester\web-int\social-networks\bin\Debug\netcoreapp2.1\social-networks.runtimeconfig.dev.json
+C:\Users\and87\Desktop\Uni\7.semester\web-int\social-networks\bin\Debug\netcoreapp2.1\social-networks.dll
+C:\Users\and87\Desktop\Uni\7.semester\web-int\social-networks\bin\Debug\netcoreapp2.1\social-networks.pdb
+C:\Users\and87\Desktop\Uni\7.semester\web-int\social-networks\obj\Debug\netcoreapp2.1\social-networks.dll
+C:\Users\and87\Desktop\Uni\7.semester\web-int\social-networks\obj\Debug\netcoreapp2.1\social-networks.pdb

@@ -8,6 +8,9 @@ namespace social_networks
         {
             FileReader fr = new FileReader();
             fr.ReadFriendshipsFile();
+            var users = fr.ReadFriendshipsReviewsFile();
+            SocialNetworksHandler snh = new SocialNetworksHandler();
+            snh.BuildAdjacencyMatrix(users);
         }
     }
 }
