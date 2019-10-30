@@ -4,6 +4,8 @@ using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Numerics.LinearAlgebra.Factorization;
 using System.Linq;
+using Accord.MachineLearning;
+
 
 namespace social_networks
 {
@@ -65,17 +67,38 @@ namespace social_networks
             return laplacian;
         }
 
-        public Evd<double> ComputeEVD(Matrix<double> laplacian) {
+        public List<double> ComputeEVD(Matrix<double> laplacian) {
             Evd<double> evd = laplacian.Evd();
 
             var column = new List<double>(evd.EigenVectors.Column(1).Storage.ToArray());
+            
+            return column;
+        }
+
+        public int[] KMeansClustering(List<double> column)
+        {
             var orderedColumn = column.OrderBy(x => x).ToList();
             double maxValue = orderedColumn.Last();
             double smallestValue = orderedColumn.First();
-            return evd;
+
+            KMeans kmeans = new KMeans(k: 10);
+
+            double[][] data = new double[column.Count][];
+
+            for(int i = 0; i < column.Count; i++) {
+                data[i] = new double[] {1, column[i]};
+            }
+
+            // Compute and retrieve the data centroids
+            var clusters = kmeans.Learn(data);
+
+            // Use the centroids to parition all the data
+            int[] labels = clusters.Decide(data);
+
+            return labels;
         }
 
-        
+
 
     }
 }

@@ -13,7 +13,8 @@ namespace social_networks
             var adjMatrix = snh.BuildAdjacencyMatrix(users);
             var diagonalMatrix = snh.MakeDiagonalMatrix(adjMatrix);
             var laplacian = snh.ComputeLaplacian(diagonalMatrix, adjMatrix);
-            snh.ComputeEVD(laplacian);
+            var column = snh.ComputeEVD(laplacian);
+            snh.KMeansClustering(column);
         }
     }
 }
