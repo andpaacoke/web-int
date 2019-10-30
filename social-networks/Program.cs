@@ -10,7 +10,10 @@ namespace social_networks
             fr.ReadFriendshipsFile();
             var users = fr.ReadFriendshipsReviewsFile();
             SocialNetworksHandler snh = new SocialNetworksHandler();
-            snh.BuildAdjacencyMatrix(users);
+            var adjMatrix = snh.BuildAdjacencyMatrix(users);
+            var diagonalMatrix = snh.MakeDiagonalMatrix(adjMatrix);
+            var laplacian = snh.ComputeLaplacian(diagonalMatrix, adjMatrix);
+            snh.ComputeEVD(laplacian);
         }
     }
 }

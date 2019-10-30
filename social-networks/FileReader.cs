@@ -55,14 +55,14 @@ namespace social_networks
             List<User> users = new List<User>();
             string[] textSplit;
             string name = "";
-            string[] friends;
+            List<string> friends = new List<string>();
             string summary = "";
             string review = "";
 
             using (StreamReader reader = new StreamReader("friendships.reviews.txt"))
             {
                 var text = reader.ReadToEnd();
-                textSplit = text.Split(new Char[] {' ', '\n', '\r' });
+                textSplit = text.Split(new Char[] {'\t', ' ', '\n', '\r' });
                 textSplit = textSplit.Where(x => x != "").ToArray();
             }
 
@@ -77,34 +77,37 @@ namespace social_networks
 
                     if (textSplit[i].StartsWith("friends"))
                     {
-                        
-                        friends = textSplit[i].Trim().Split("\t");
-                        friends = friends.Where(x => !x.StartsWith("friends")).ToArray();
                         i++;
-
-                        if (textSplit[i] == "summary:")
+                        while(!(textSplit[i].StartsWith("summary:"))){
+                                friends.Add(textSplit[i]);
+                                i++;
+                            }
+                    
+                        if (textSplit[i].StartsWith("summary:"))
                         {
                             summary = "";
                             i++;
-                            while(!(textSplit[i] == "review:")){
-                                summary += textSplit[i];
+                            while(!(textSplit[i].StartsWith("review:"))){
+                                summary += " " + textSplit[i];
                                 i++;
                             }
                             if (textSplit[i] == "review:")
                             {
                                 review = "";
                                 i++;
-                                while (!(textSplit[i] == "user:"))
+                                while (!(textSplit[i].StartsWith("user:")) && i < textSplit.Length - 1)
                                 {
-                                    review += textSplit[i];
+                                    review += " " + textSplit[i];
                                     i++;
                                 }
-                                users.Add(new User(name, new List<string>(friends), summary.ToLower(), review.ToLower()));
-                            }
+                                users.Add(new User(name, friends, summary.ToLower(), review.ToLower()));
+                                friends = new List<string>();                            }
                         }
                     }
                 }
-                i++;
+                else {
+                    i++;
+                }
             }
             return users;
         }
