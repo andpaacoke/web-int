@@ -8,5 +8,9 @@
     <PackageReference Include="MathNet.Numerics" Version="4.9.0"/>
     <PackageReference Include="Accord" Version="3.8.0"/>
     <PackageReference Include="Accord.MachineLearning" Version="3.8.0"/>
+    <PackageReference Include="SimpleNetNlp" Version="3.8.0"/>
+    <PackageReference Include="SimpleNetNlp.Models.Sentiment" Version="3.8.0"/>
+    <PackageReference Include="CodingUpAStorm.VaderSharp" Version="1.0.4"/>
+    <PackageReference Include="Stanford.NLP.CoreNLP" Version="3.9.2"/>
   </ItemGroup>
 </Project>
