@@ -1,7 +1,7 @@
 {
   "runtimeTarget": {
     "name": ".NETCoreApp,Version=v2.1",
-    "signature": "dd1fd4a62c0f82aac313f869a1ad536465a3af6d"
+    "signature": "65dbf693423422e13ca1ff623f042163abfaca5e"
   },
   "compilationOptions": {},
   "targets": {
@@ -13,7 +13,8 @@
           "CodingUpAStorm.VaderSharp": "1.0.4",
           "MathNet.Numerics": "4.9.0",
           "SimpleNetNlp": "3.8.0",
-          "SimpleNetNlp.Models.Sentiment": "3.8.0"
+          "SimpleNetNlp.Models.Sentiment": "3.8.0",
+          "Stanford.NLP.CoreNLP": "3.9.2"
         },
         "runtime": {
           "social-networks.dll": {}
@@ -75,6 +76,122 @@
           }
         }
       },
+      "IKVM/8.1.5717": {
+        "runtime": {
+          "lib/IKVM.AWT.WinForms.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Beans.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Charsets.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Cldrdata.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Corba.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Core.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Jdbc.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Localedata.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Management.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Media.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Misc.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Naming.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Nashorn.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Remoting.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Security.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.SwingAWT.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Text.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Tools.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.Util.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.XML.API.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.XML.Bind.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.XML.Crypto.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.XML.Parse.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.XML.Transform.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.XML.WebServices.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.OpenJDK.XML.XPath.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.Runtime.JNI.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          },
+          "lib/IKVM.Runtime.dll": {
+            "assemblyVersion": "8.1.5717.0",
+            "fileVersion": "8.1.5717.0"
+          }
+        }
+      },
       "MathNet.Numerics/4.9.0": {
         "runtime": {
           "lib/netstandard2.0/MathNet.Numerics.dll": {
@@ -84,7 +201,50 @@
         }
       },
       "SimpleNetNlp/3.8.0": {},
-      "SimpleNetNlp.Models.Sentiment/3.8.0": {}
+      "SimpleNetNlp.Models.Sentiment/3.8.0": {},
+      "Stanford.NLP.CoreNLP/3.9.2": {
+        "dependencies": {
+          "IKVM": "8.1.5717"
+        },
+        "runtime": {
+          "lib/ejml-0.23.dll": {
+            "assemblyVersion": "0.23.0.0",
+            "fileVersion": "0.23.0.0"
+          },
+          "lib/javax.json.dll": {
+            "assemblyVersion": "1.0.4.0",
+            "fileVersion": "1.0.4.0"
+          },
+          "lib/joda-time.dll": {
+            "assemblyVersion": "2.9.4.0",
+            "fileVersion": "2.9.4.0"
+          },
+          "lib/jollyday.dll": {
+            "assemblyVersion": "0.4.9.0",
+            "fileVersion": "0.4.9.0"
+          },
+          "lib/protobuf.dll": {
+            "assemblyVersion": "2.6.1.0",
+            "fileVersion": "2.6.1.0"
+          },
+          "lib/slf4j-api.dll": {
+            "assemblyVersion": "1.7.2.0",
+            "fileVersion": "1.7.2.0"
+          },
+          "lib/slf4j-simple.dll": {
+            "assemblyVersion": "1.7.2.0",
+            "fileVersion": "1.7.2.0"
+          },
+          "lib/stanford-corenlp-3.9.2.dll": {
+            "assemblyVersion": "3.9.2.0",
+            "fileVersion": "3.9.2.0"
+          },
+          "lib/xom.dll": {
+            "assemblyVersion": "1.2.10.0",
+            "fileVersion": "1.2.10.0"
+          }
+        }
+      }
     }
   },
   "libraries": {
@@ -128,6 +288,13 @@
       "path": "codingupastorm.vadersharp/1.0.4",
       "hashPath": "codingupastorm.vadersharp.1.0.4.nupkg.sha512"
     },
+    "IKVM/8.1.5717": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-5olx8s2XYTfu6xu59ozQi9Jz5s6IHdJTK+XEFKpPxxVHoQWphb2G78btQTu1Z69I18n0tpcJ/EK5Dg2wmHJQIA==",
+      "path": "ikvm/8.1.5717",
+      "hashPath": "ikvm.8.1.5717.nupkg.sha512"
+    },
     "MathNet.Numerics/4.9.0": {
       "type": "package",
       "serviceable": true,
@@ -148,6 +315,13 @@
       "sha512": "sha512-bXhOhYuwRaxhQLXJgGJnj1zmfqXP32DaIP3KNkz7iZMCqZoja27pxrvOoK8Q2fNBsbPWWNOV9gqfNkY49QEM4A==",
       "path": "simplenetnlp.models.sentiment/3.8.0",
       "hashPath": "simplenetnlp.models.sentiment.3.8.0.nupkg.sha512"
+    },
+    "Stanford.NLP.CoreNLP/3.9.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-clyr3zU4XRWv1IfVIXwv81yhIwK/ZyZgDRIL3twYRq/Cnr4Wb4XBUAP00NtwHtCopGr6kSnUsVCEp7SKBZo7LQ==",
+      "path": "stanford.nlp.corenlp/3.9.2",
+      "hashPath": "stanford.nlp.corenlp.3.9.2.nupkg.sha512"
     }
   }
 }
