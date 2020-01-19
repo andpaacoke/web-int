@@ -47,7 +47,12 @@ namespace content_based
 
             var recommendableItems = recommendableDocuments.Except(reviewsByUser).ToList();
             var TFReviewsByUser = TFReviewer(reviewsByUser);
-            InverseDocumentFrequency(recommendableItemsReviews, TFReviewsByUser);
+            var IDFs = InverseDocumentFrequency(recommendableItemsReviews, TFReviewsByUser);
+            var TFIDFs = CalcTFIDF(TFReviewsByUser, IDFs);
+
+            var TFAllReviews = TFReviewer(reviews);
+            var IDFAllReviews = InverseDocumentFrequency(reviews, TFAllReviews);
+            var TFIDFAllReviews = CalcTFIDF(TFAllReviews, IDFAllReviews);
         }
 
 
@@ -79,9 +84,8 @@ namespace content_based
             return TF;
         }
 
-        public int InverseDocumentFrequency(List<Review> reviewsNotRatedByUser, List<Dictionary<string,int>> TFReviewsByUser) {
+        public Dictionary<string, double>  InverseDocumentFrequency(List<Review> reviewsNotRatedByUser, List<Dictionary<string,int>> TFReviewsByUser) {
             int numberOfRecommendable = reviewsNotRatedByUser.Count;
-            int docKeywordCount = 0;
             Dictionary<string, double> termIDFValues = new Dictionary<string, double>();
             Dictionary<string, int> allDocumentsWordFrequency = new Dictionary<string, int>();
 
@@ -96,7 +100,6 @@ namespace content_based
                 }
             }
 
-
             foreach (KeyValuePair<string, double> entry in termIDFValues)
             {
                 foreach(var review in reviewsNotRatedByUser) {
@@ -105,13 +108,33 @@ namespace content_based
                     }
                 }
             }
-        
 
+            foreach (KeyValuePair<string, int> entry in allDocumentsWordFrequency)
+            {
+                if(entry.Value != 0) {
+                    termIDFValues[entry.Key] =  Math.Log((double)numberOfRecommendable / (double)entry.Value);
+                }
+                else {
+                    termIDFValues[entry.Key] = 0;
+                }
+            }
+            return termIDFValues;
 
-            double InverseDocumentFrequency = 0;
-            InverseDocumentFrequency = Math.Log(numberOfRecommendable / docKeywordCount);
-            return 2;
+        }
 
+        public List<Dictionary<string,double>> CalcTFIDF(List<Dictionary<string,int>> TFs, Dictionary<string, double> IDFs) {
+            List<Dictionary<string, double>> TFIDFs = new List<Dictionary<string, double>>();
+
+            foreach (var dict in TFs)
+            {
+                Dictionary<string, double> IDF = new Dictionary<string, double>();
+                foreach (KeyValuePair<string, int> entry in dict)
+                {
+                    IDF.Add(entry.Key, entry.Value * IDFs[entry.Key]);
+                }
+                TFIDFs.Add(IDF);
+            }
+            return TFIDFs;
         }
     }
 }
