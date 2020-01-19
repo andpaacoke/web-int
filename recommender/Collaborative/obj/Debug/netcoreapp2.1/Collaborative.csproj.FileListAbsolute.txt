@@ -1,0 +1,11 @@
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\Collaborative\obj\Debug\netcoreapp2.1\Collaborative.csprojAssemblyReference.cache
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\Collaborative\obj\Debug\netcoreapp2.1\Collaborative.csproj.CoreCompileInputs.cache
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\Collaborative\obj\Debug\netcoreapp2.1\Collaborative.AssemblyInfoInputs.cache
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\Collaborative\obj\Debug\netcoreapp2.1\Collaborative.AssemblyInfo.cs
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\Collaborative\bin\Debug\netcoreapp2.1\Collaborative.deps.json
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\Collaborative\bin\Debug\netcoreapp2.1\Collaborative.runtimeconfig.json
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\Collaborative\bin\Debug\netcoreapp2.1\Collaborative.runtimeconfig.dev.json
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\Collaborative\bin\Debug\netcoreapp2.1\Collaborative.dll
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\Collaborative\bin\Debug\netcoreapp2.1\Collaborative.pdb
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\Collaborative\obj\Debug\netcoreapp2.1\Collaborative.dll
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\Collaborative\obj\Debug\netcoreapp2.1\Collaborative.pdb

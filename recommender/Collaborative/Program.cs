@@ -6,7 +6,10 @@ namespace Collaborative
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Recommender fn = new Recommender();
+            var m = fn.ReadFile("u1.base");
+            var preProcessedMatrix = fn.PreProcessMatrix(m);
+            fn.DoFactorization(m, preProcessedMatrix);
         }
     }
 }
