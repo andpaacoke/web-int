@@ -54,7 +54,6 @@ namespace Collaborative
             Matrix<double> preProcessedMatrix = Matrix<double>.Build.Dense(943, 1682);
 
             double totalRatingsValue = m.ColumnSums().Sum();
-            Console.WriteLine(m.Diagonal().Sum());
             for (int i = 0 ; i < m.RowCount; i ++) {
                 for (int j = 0; j < m.ColumnCount; j++) {
                     if(m[i, j] > 0){
@@ -68,16 +67,25 @@ namespace Collaborative
 
 
         public void DoFactorization(Matrix<double> m, Matrix<double> preProcessedMatrix) {
-            var userFactorMatrix = Matrix<double>.Build.Random(m.RowCount, 20);
+            Random random = new Random();
+            var userFactorMatrix = Matrix<double>.Build.Dense(m.RowCount, 20);
             var factorMovieMatrix = Matrix<double>.Build.Dense(20, m.ColumnCount);
+            for (int i = 0; i < userFactorMatrix.RowCount; i++)
+            {
+                for (int j = 0; j < userFactorMatrix.ColumnCount; j++)
+                {
+                    userFactorMatrix[i, j] = random.NextDouble();
+                    factorMovieMatrix[j, i] = random.NextDouble();
+                }
+            }
+
             var resultMatrix = Matrix<double>.Build.Dense(m.RowCount, m.ColumnCount);
 
             userFactorMatrix.Multiply(factorMovieMatrix, resultMatrix);
             Console.WriteLine(resultMatrix);
-            resultMatrix.Add(preProcessedMatrix, resultMatrix);
+            double squareError = 10;
 
-
-            for (int runs = 0; runs < 10000; runs++)
+            for (int runs = 0; runs < 5000 && squareError > 0.001; runs++)
             {
                 double learningRate = 0.001;
                 double weightDecay = 0.001;
@@ -87,22 +95,39 @@ namespace Collaborative
                     {
                         if (m[i, j] > 0)
                         {
-                            double error = preProcessedMatrix[i, j] - resultMatrix[i, j];
+                            double error = m[i, j] - resultMatrix[i, j];
                             for (int k = 0; k < userFactorMatrix.ColumnCount; k++)
                             {
                                 userFactorMatrix[i, k] =
                                     userFactorMatrix[i, k] +
-                                    learningRate * (error * factorMovieMatrix[k, j] - weightDecay * userFactorMatrix[i, k]);
+                                    (learningRate *  error * factorMovieMatrix[k, j]) - (weightDecay * userFactorMatrix[i, k]);
                                 factorMovieMatrix[k, j] =
                                     factorMovieMatrix[k, j] +
-                                    learningRate * (error * userFactorMatrix[i, k] - weightDecay * factorMovieMatrix[k, j]);
+                                    (learningRate * userFactorMatrix[i, k] * error) - (weightDecay * factorMovieMatrix[k, j]);
                             }
                         }
+
                     }
                 }
                 userFactorMatrix.Multiply(factorMovieMatrix, resultMatrix);
+
             }
-            resultMatrix.Add(preProcessedMatrix, resultMatrix);
+                squareError = 0;
+                int actualRatingCount = 0;
+                double RMSE = 0;
+			    for (int i = 0; i < m.RowCount; i++) {
+				    for (int j = 0; j < m.ColumnCount; j++) {
+					    if (m[i, j] > 0) {
+                            actualRatingCount++;
+						    squareError =
+							    squareError + Math.Pow((resultMatrix[i, j] - m[i, j]), 2);
+                            
+					    }
+                    }
+                }
+                RMSE = Math.Sqrt(squareError/actualRatingCount);
+                Console.WriteLine(RMSE);
+            //resultMatrix.Add(preProcessedMatrix, resultMatrix);
 
         }
 
