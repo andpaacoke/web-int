@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <RootNamespace>content_based</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Json.Net" Version="1.0.18"/>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3"/>
+  </ItemGroup>
+</Project>

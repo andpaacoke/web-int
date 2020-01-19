@@ -1,0 +1,11 @@
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\content-based\bin\Debug\netcoreapp2.1\content-based.deps.json
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\content-based\bin\Debug\netcoreapp2.1\content-based.runtimeconfig.json
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\content-based\bin\Debug\netcoreapp2.1\content-based.runtimeconfig.dev.json
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\content-based\bin\Debug\netcoreapp2.1\content-based.dll
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\content-based\bin\Debug\netcoreapp2.1\content-based.pdb
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\content-based\obj\Debug\netcoreapp2.1\content-based.csprojAssemblyReference.cache
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\content-based\obj\Debug\netcoreapp2.1\content-based.csproj.CoreCompileInputs.cache
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\content-based\obj\Debug\netcoreapp2.1\content-based.AssemblyInfoInputs.cache
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\content-based\obj\Debug\netcoreapp2.1\content-based.AssemblyInfo.cs
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\content-based\obj\Debug\netcoreapp2.1\content-based.dll
+C:\Users\andreas\Desktop\7.semester\web-int\recommender\content-based\obj\Debug\netcoreapp2.1\content-based.pdb
