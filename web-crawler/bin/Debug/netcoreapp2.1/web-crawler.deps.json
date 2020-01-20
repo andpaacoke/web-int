@@ -1,14 +1,15 @@
 {
   "runtimeTarget": {
     "name": ".NETCoreApp,Version=v2.1",
-    "signature": "ba2af83f2b84e184015ac0dc64faeb2fd64b6e43"
+    "signature": "4a3c696a281efd07f6ce0907dc30e8fc4d9026a9"
   },
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v2.1": {
       "web-crawler/1.0.0": {
         "dependencies": {
-          "HtmlAgilityPack": "1.11.12"
+          "HtmlAgilityPack": "1.11.12",
+          "MathNet.Numerics": "4.9.0"
         },
         "runtime": {
           "web-crawler.dll": {}
@@ -25,6 +26,14 @@
           "lib/netstandard2.0/HtmlAgilityPack.dll": {
             "assemblyVersion": "1.11.12.0",
             "fileVersion": "1.11.12.0"
+          }
+        }
+      },
+      "MathNet.Numerics/4.9.0": {
+        "runtime": {
+          "lib/netstandard2.0/MathNet.Numerics.dll": {
+            "assemblyVersion": "4.9.0.0",
+            "fileVersion": "4.9.0.0"
           }
         }
       },
@@ -619,6 +628,13 @@
       "sha512": "sha512-ZEczeHJJrgtpSz/cJ+8FSa+JVoXSZ5+rSc8XYSUVns8yoLJPXLWdEbgDh5kI4sxZaCswGepByAVW0aExTw4QaQ==",
       "path": "htmlagilitypack/1.11.12",
       "hashPath": "htmlagilitypack.1.11.12.nupkg.sha512"
+    },
+    "MathNet.Numerics/4.9.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-4cYzhuMDq57oC6lwhMmuigdhP+oywmp1bMtFzvzz4wYr5eWbg0JLDPo/L1juqDkIBj+rc3FrxUEX7jcHRmnF+w==",
+      "path": "mathnet.numerics/4.9.0",
+      "hashPath": "mathnet.numerics.4.9.0.nupkg.sha512"
     },
     "runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl/4.3.0": {
       "type": "package",
