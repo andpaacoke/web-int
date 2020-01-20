@@ -36,7 +36,7 @@ namespace web_crawler
         public List<string> VisitedHrefs { get; set; }
         public List<string> UrlsToVisit = new List<string>();
         // List containing each document's normalized tfidf vector
-        public List<Dictionary<string, double>> NormalizedTfIdfDocumentVectors { get; set; }
+        public Dictionary<int, Dictionary<string, double>> NormalizedTfIdfDocumentVectors { get; set; }
 
 
         public WebCrawler(string seed)
@@ -50,9 +50,8 @@ namespace web_crawler
             InverseDocumentFrequency = new Dictionary<string, double>();
             TfIdfWeight = new List<Dictionary<string, double>>();
             QueryTfIdfWeight = new Dictionary<string, double>();
-
             VisitedHrefs = new List<string>();
-            NormalizedTfIdfDocumentVectors = new List<Dictionary<string, double>>();
+            NormalizedTfIdfDocumentVectors = new Dictionary<int, Dictionary<string, double>>();
         }
 
         public async Task StartCrawlerAsync()
@@ -375,49 +374,71 @@ namespace web_crawler
 
             var sortedTerms = terms.OrderBy(x => x.Word).ThenBy(term => term.Id).ToList();
 
-            /*             //Terms in all documents
-                        PopulateOverallTermFrequency(sortedTerms);
+            //Terms in all documents
+            PopulateOverallTermFrequency(sortedTerms);
 
-                        //Save a list of document id's that each term is precent in
-                        PopulatePostingList(sortedTerms);
+            //Save a list of document id's that each term is precent in
+            PopulatePostingList(sortedTerms);
 
-                        // Number of times a term appears on a single document
-                        PopulateTermDocFrequency(sortedTerms);
+            // Number of times a term appears on a single document
+            PopulateTermDocFrequency(sortedTerms);
 
-                        // Number of documents a term appears in
-                        PopulateDocumentFrequency(sortedTerms);
+            // Number of documents a term appears in
+            PopulateDocumentFrequency(sortedTerms);
 
-                        // Logarithm applied on docfreq df
-                        PopulateInverseDocumentFrequency();
+            // Logarithm applied on docfreq df
+            PopulateInverseDocumentFrequency();
 
-                        //Calculates the tfIdf weights for the terms in the pages
-                        CalculateTfIdfWeight();
+            //Calculates the tfIdf weights for the terms in the pages
+            CalculateTfIdfWeight();
 
-                        // Normalizes document vectors so they can be compared to the query
-                        NormaliseDocumentVectors();
-             */
+            // Normalizes document vectors so they can be compared to the query
+            NormaliseDocumentVectors();
+             
+            // reads pages stored in html
             ReadAllPages();
             //GetSiteOutDegree();
+
+            // After reading pages we read the outdegree links for each page
             ReadOutDegreeLinks();
-            var transitionProbabilityMatrix = CreateTransitionProbabilityMatrix();
-            Vector<double> probabilityDistribution = Vector<double>.Build.Dense(transitionProbabilityMatrix.RowCount);
-            probabilityDistribution[0] = 1.0;
-            double sum = 0;
-            double totalSum = 0;
-            for (int j = 0; j < transitionProbabilityMatrix.RowCount; j++)
-            {
-                sum = transitionProbabilityMatrix.Row(j).Sum();
-                if(sum < 0.98) {
-                    Console.WriteLine($"Row {j} har sum {sum}");
-                }
-                totalSum += sum;
-            }   
-            Console.WriteLine(totalSum / transitionProbabilityMatrix.RowCount);
-            for(int i = 0; i < 20; i++) {
-                probabilityDistribution = ComputeTransition(transitionProbabilityMatrix, probabilityDistribution);
-            }
-            Console.WriteLine(probabilityDistribution.Sum());
+
             
+        }
+
+        private Dictionary<int, double> GetPageRank() {
+            var transitionProbabilityMatrix = CreateTransitionProbabilityMatrix();
+            Vector<double> probabilityDistributionOld = Vector<double>.Build.Dense(transitionProbabilityMatrix.RowCount);
+            Vector<double> probabilityDistributionNew = Vector<double>.Build.Dense(transitionProbabilityMatrix.RowCount);
+            Vector<double> probabilityDistributionTemp = Vector<double>.Build.Dense(transitionProbabilityMatrix.RowCount);
+
+            probabilityDistributionOld[0] = 1.0;
+            double errorThreshold = 0.001;
+            double error = 0;
+            do{
+                probabilityDistributionNew = ComputeTransition(transitionProbabilityMatrix, probabilityDistributionOld);
+                probabilityDistributionTemp = probabilityDistributionNew.Subtract(probabilityDistributionOld);
+                error = probabilityDistributionTemp.PointwiseAbs().Sum();
+                probabilityDistributionOld = probabilityDistributionNew;
+            }while(error > errorThreshold);
+
+            Dictionary<int, double> pageRank = new Dictionary<int, double>();
+            for(int i = 0; i < probabilityDistributionNew.Count; i ++) {
+                pageRank.Add(i+1, probabilityDistributionNew[i]);
+            }
+            return pageRank;
+        }
+
+        private IOrderedEnumerable<KeyValuePair<int, double>> AggregateCosineAndPageRank(Dictionary<int, double> cosineScore, 
+                                                                                         Dictionary<int, double> pageRankScore){
+            Dictionary<int, double> aggregatedScores = new Dictionary<int, double>();
+            for (int i = 0; i < cosineScore.Count; i++) {
+                aggregatedScores.Add(i + 1, (cosineScore[i + 1] * pageRankScore[i + 1]));
+                
+            }
+
+            IOrderedEnumerable<KeyValuePair<int, double>> sortedAggregates;
+            sortedAggregates = aggregatedScores.OrderByDescending(key => key.Value);
+            return sortedAggregates;            
         }
 
         private void PopulateDocumentFrequency(List<Term> sortedTerms)
@@ -624,39 +645,55 @@ namespace web_crawler
         public void HandleUserQuery(string userQuery)
         {
             userQuery = userQuery.ToLower();
-            CalculateQueryTfIdf(userQuery);
+            var stopWords = StopWord.GetEnglishStopwords();
+            var userQueryNoStopwords = userQuery.Split(" ").Except(stopWords).ToString();
+            CalculateQueryTfIdf(userQueryNoStopwords);
             var normalisedQueryVector = NormaliseQueryVector();
-            var sortedCosineScore = CalculateCosineSimilarity(normalisedQueryVector, NormalizedTfIdfDocumentVectors);
-            var topKPages = TakeTopKResults(sortedCosineScore, 10);
-            PrintTopResults(topKPages, userQuery.Split(" "));
+            var cosineScores = CalculateCosineSimilarity(normalisedQueryVector);
+            var sortedCosineScores = cosineScores.OrderByDescending(key => key.Value);
+            var pageRanks = GetPageRank();
+            var sortedPageRanks = pageRanks.OrderByDescending(key => key.Value);
+            var sortedAggregatedScores = AggregateCosineAndPageRank(cosineScores, pageRanks);
+            var topKPagesForCosineScore = TakeTopKResults(sortedCosineScores, 10);
+            var topKPagesForPageRanks = TakeTopKResults(sortedPageRanks, 10);
+            var topKPagesForAggregatedScore = TakeTopKResults(sortedAggregatedScores, 10);
+            PrintTopResults(topKPagesForCosineScore, userQuery.Split(" "));
+            PrintTopResults(topKPagesForPageRanks, userQuery.Split(" "));
+            PrintTopResults(topKPagesForAggregatedScore, userQuery.Split(" "));
+        }
+
+        public void PruneContenders() {
+            
         }
 
         //Cosine similarity is calculated by taking the dot product of the vectors. This means entries with identical keys should be multiplied, 
         // and all these values summed together.
-        private IOrderedEnumerable<KeyValuePair<int, double>> CalculateCosineSimilarity(Dictionary<string, double> normalisedQueryVector,
-                                                List<Dictionary<string, double>> normalisedDocumentVectors)
+        private Dictionary<int, double> CalculateCosineSimilarity(Dictionary<string, double> normalisedQueryVector)
         {
             Dictionary<int, double> cosineScore = new Dictionary<int, double>();
-            for (int i = 0; i < normalisedDocumentVectors.Count; i++)
+
+            // Iterate over the document vectors we want to calculate similarity score for (in respect to the query)
+            foreach(KeyValuePair<int, Dictionary<string,double>> vector in NormalizedTfIdfDocumentVectors)
             {
                 double score = 0;
                 foreach (KeyValuePair<string, double> entry in normalisedQueryVector)
                 {
-                    if (normalisedDocumentVectors[i].ContainsKey(entry.Key))
+                    if (vector.Value.ContainsKey(entry.Key))
                     {
-                        score += normalisedDocumentVectors[i][entry.Key] * entry.Value;
+                        score += vector.Value[entry.Key] * entry.Value;
                     }
                 }
-                cosineScore.Add(i + 1, score);
+                cosineScore.Add(vector.Key, score);
             }
 
-            return cosineScore.OrderByDescending(key => key.Value);
+            return cosineScore;
         }
 
         // We read all pages and add the top k results such that we have html to return
-        private List<Page> TakeTopKResults(IOrderedEnumerable<KeyValuePair<int, double>> sortedCosineScore, int k)
+        private List<Page> TakeTopKResults(IOrderedEnumerable<KeyValuePair<int, double>> sortedScores, int k)
         {
-            var topKResults = sortedCosineScore.Take(k);
+            var topKResults= sortedScores.Take(k);
+
             List<Page> topKPages = new List<Page>();
 
             foreach (var result in topKResults)
@@ -685,23 +722,23 @@ namespace web_crawler
             }
         }
 
-        public List<Dictionary<string, double>> NormaliseDocumentVectors()
+        public Dictionary<int, Dictionary<string, double>> NormaliseDocumentVectors()
         {
 
             for (int i = 0; i < TfIdfWeight.Count; i++)
             {
-                NormalizedTfIdfDocumentVectors.Add(new Dictionary<string, double>());
+                NormalizedTfIdfDocumentVectors.Add(i+1,new Dictionary<string, double>());
                 double vectorLength = 0;
                 foreach (KeyValuePair<string, double> entry in TfIdfWeight[i])
                 {
-                    NormalizedTfIdfDocumentVectors[i].Add(entry.Key, 0);
+                    NormalizedTfIdfDocumentVectors[i + 1].Add(entry.Key, 0);
                     vectorLength += (entry.Value * entry.Value);
                 }
                 vectorLength = Math.Sqrt(vectorLength);
 
                 foreach (KeyValuePair<string, double> entry in TfIdfWeight[i])
                 {
-                    NormalizedTfIdfDocumentVectors[i][entry.Key] = entry.Value / vectorLength;
+                    NormalizedTfIdfDocumentVectors[i + 1][entry.Key] = entry.Value / vectorLength;
                 }
             }
             return NormalizedTfIdfDocumentVectors;
@@ -808,30 +845,55 @@ namespace web_crawler
 
         private Matrix<double> CreateTransitionProbabilityMatrix()
         {
-            var pagesWithOutDegrees = Pages.Where(p => p.OutDegreeLinks.Count != 0).ToList();
-            Matrix<double> transitionProbabilityMatrix = Matrix<double>.Build.Dense(pagesWithOutDegrees.Count, pagesWithOutDegrees.Count);
+            Matrix<double> transitionProbabilityMatrix = Matrix<double>.Build.Dense(Pages.Count, Pages.Count);
+
+
+            // Remove all dead links from pages outDegreeLinks
+            // for (int i = 0; i < pagesWithOutDegrees.Count; i++)
+            // {
+            //     List<string> urlsToRemove = new List<string>();
+            //     foreach(var url in pagesWithOutDegrees[i].OutDegreeLinks) {
+            //         if(!pagesWithOutDegrees.Any(p => p.Url == url)) {
+            //             urlsToRemove.Add(url);
+            //         }
+            //     }
+            //     foreach (var url in urlsToRemove)
+            //     {
+            //         pagesWithOutDegrees[i].OutDegreeLinks.Remove(url);
+            //     }
+            // }
 
             for (int i = 0; i < transitionProbabilityMatrix.RowCount; i++)
             {
                 for (int j = 0; j < transitionProbabilityMatrix.ColumnCount; j++)
                 {
-                    foreach (var url in pagesWithOutDegrees[i].OutDegreeLinks)
+                    foreach (var url in Pages[i].OutDegreeLinks)
                     {
-                        if (pagesWithOutDegrees[j].Url == url)
+                        if (Pages[j].Url == url)
                         {
-                            transitionProbabilityMatrix[i, j] += (double)1.0 / (double)pagesWithOutDegrees[i].OutDegreeLinks.Count;
+                            transitionProbabilityMatrix[i, j] += (double)1.0 / (double)Pages[i].OutDegreeLinks.Count;
                         }
                     }
                 }
             }
 
-            Matrix<double> danglingPageMatrix = Matrix<double>.Build.Dense(pagesWithOutDegrees.Count, pagesWithOutDegrees.Count, (double)1.0 / (double)pagesWithOutDegrees.Count);
-            Matrix<double> weightedTransProbMatrix = Matrix<double>.Build.Dense(pagesWithOutDegrees.Count, pagesWithOutDegrees.Count);
-            Matrix<double> weightedDanglingPageMatrix = Matrix<double>.Build.Dense(pagesWithOutDegrees.Count, pagesWithOutDegrees.Count);
+            Matrix<double> danglingPageMatrix = Matrix<double>.Build.Dense(Pages.Count, Pages.Count, (double)1.0 / (double)Pages.Count);
+            Matrix<double> weightedTransProbMatrix = Matrix<double>.Build.Dense(Pages.Count, Pages.Count);
+            Matrix<double> weightedDanglingPageMatrix = Matrix<double>.Build.Dense(Pages.Count, Pages.Count);
             weightedTransProbMatrix = transitionProbabilityMatrix.Multiply(0.9);
-            weightedDanglingPageMatrix = danglingPageMatrix.Multiply(0.1);
+            for (int i = 0; i <Pages.Count; i ++) {
+                for (int j = 0; j <Pages.Count; j++){
+                    if(Pages[i].OutDegreeLinks.Count == 0){
+                        weightedDanglingPageMatrix[i, j] = 1 * danglingPageMatrix[i, j];
+                    }
+                    else {
+                        weightedDanglingPageMatrix[i, j] = 0.1 * danglingPageMatrix[i, j];
+                    }
+                }
+
+            }
             
-            Matrix<double> finalMatrixLol = Matrix<double>.Build.Dense(pagesWithOutDegrees.Count, pagesWithOutDegrees.Count);
+            Matrix<double> finalMatrixLol = Matrix<double>.Build.Dense(Pages.Count, Pages.Count);
             weightedTransProbMatrix.Add(weightedDanglingPageMatrix, finalMatrixLol);
 
             return finalMatrixLol;
@@ -853,7 +915,6 @@ namespace web_crawler
                 newTransProbVector[i] = newValue;
                 newValue = 0;
             }
-            Console.WriteLine(newTransProbVector.Sum());
 
             return newTransProbVector;
 
