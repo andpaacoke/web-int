@@ -431,9 +431,11 @@ namespace web_crawler
         private IOrderedEnumerable<KeyValuePair<int, double>> AggregateCosineAndPageRank(Dictionary<int, double> cosineScore, 
                                                                                          Dictionary<int, double> pageRankScore){
             Dictionary<int, double> aggregatedScores = new Dictionary<int, double>();
-            for (int i = 0; i < cosineScore.Count; i++) {
-                aggregatedScores.Add(i + 1, (cosineScore[i + 1] * pageRankScore[i + 1]));
-                
+            foreach (KeyValuePair<int,double> entry in cosineScore)
+            {
+                if(pageRankScore.ContainsKey(entry.Key)){
+                    aggregatedScores.Add(entry.Key, (entry.Value * pageRankScore[entry.Key]));
+                }
             }
 
             IOrderedEnumerable<KeyValuePair<int, double>> sortedAggregates;
@@ -645,45 +647,63 @@ namespace web_crawler
         public void HandleUserQuery(string userQuery)
         {
             userQuery = userQuery.ToLower();
-            var stopWords = StopWord.GetEnglishStopwords();
-            var userQueryNoStopwords = userQuery.Split(" ").Except(stopWords).ToString();
+            List<string> stopWords = StopWord.GetEnglishStopwords();
+            string userQueryNoStopwords = string.Join(" ", userQuery.Split(" ").Except(stopWords).ToArray());
+            List<Page> pagesContainingQueryTerms = PruneContenders(userQueryNoStopwords);
             CalculateQueryTfIdf(userQueryNoStopwords);
-            var normalisedQueryVector = NormaliseQueryVector();
-            var cosineScores = CalculateCosineSimilarity(normalisedQueryVector);
-            var sortedCosineScores = cosineScores.OrderByDescending(key => key.Value);
-            var pageRanks = GetPageRank();
-            var sortedPageRanks = pageRanks.OrderByDescending(key => key.Value);
-            var sortedAggregatedScores = AggregateCosineAndPageRank(cosineScores, pageRanks);
-            var topKPagesForCosineScore = TakeTopKResults(sortedCosineScores, 10);
-            var topKPagesForPageRanks = TakeTopKResults(sortedPageRanks, 10);
-            var topKPagesForAggregatedScore = TakeTopKResults(sortedAggregatedScores, 10);
+            Dictionary<string,double> normalisedQueryVector = NormaliseQueryVector();
+
+            Dictionary<int, double> cosineScores = CalculateCosineSimilarity(normalisedQueryVector, pagesContainingQueryTerms);
+            Dictionary<int, double>  pageRanks = GetPageRank();
+            IOrderedEnumerable<KeyValuePair<int, double>> sortedCosineScores = cosineScores.OrderByDescending(key => key.Value);
+            IOrderedEnumerable<KeyValuePair<int, double>> sortedPageRanks = pageRanks.OrderByDescending(key => key.Value);
+            IOrderedEnumerable<KeyValuePair<int, double>> sortedAggregatedScores = AggregateCosineAndPageRank(cosineScores, pageRanks);
+
+            List<Page> topKPagesForCosineScore = TakeTopKResults(sortedCosineScores, 10);
+            List<Page> topKPagesForPageRanks = TakeTopKResults(sortedPageRanks, 10);
+            List<Page> topKPagesForAggregatedScore = TakeTopKResults(sortedAggregatedScores, 10);
+
             PrintTopResults(topKPagesForCosineScore, userQuery.Split(" "));
             PrintTopResults(topKPagesForPageRanks, userQuery.Split(" "));
             PrintTopResults(topKPagesForAggregatedScore, userQuery.Split(" "));
         }
 
-        public void PruneContenders() {
-            
+        public List<Page> PruneContenders(string userQuery) {
+            List<Page> contenderPages = new List<Page>();
+            foreach (string term in userQuery.Split(" ")) {
+                if(PostingList.ContainsKey(term)) {
+                    Console.WriteLine($"Contains term {term}");
+                    foreach (int id in PostingList[term])
+                    {
+                        if(!contenderPages.Any(p => p.Id == id)){
+                            contenderPages.Add(Pages.Find(p => p.Id == id));
+                        }
+                    }
+                }
+            }
+            return contenderPages;
         }
 
         //Cosine similarity is calculated by taking the dot product of the vectors. This means entries with identical keys should be multiplied, 
         // and all these values summed together.
-        private Dictionary<int, double> CalculateCosineSimilarity(Dictionary<string, double> normalisedQueryVector)
+        private Dictionary<int, double> CalculateCosineSimilarity(Dictionary<string, double> normalisedQueryVector, List<Page> contenderPages)
         {
             Dictionary<int, double> cosineScore = new Dictionary<int, double>();
-
+            if(contenderPages.Count == 0) {
+                contenderPages = Pages;
+            }
             // Iterate over the document vectors we want to calculate similarity score for (in respect to the query)
-            foreach(KeyValuePair<int, Dictionary<string,double>> vector in NormalizedTfIdfDocumentVectors)
+            foreach(Page page in contenderPages)
             {
                 double score = 0;
                 foreach (KeyValuePair<string, double> entry in normalisedQueryVector)
                 {
-                    if (vector.Value.ContainsKey(entry.Key))
+                    if (NormalizedTfIdfDocumentVectors[page.Id].ContainsKey(entry.Key))
                     {
-                        score += vector.Value[entry.Key] * entry.Value;
+                        score += NormalizedTfIdfDocumentVectors[page.Id][entry.Key] * entry.Value;
                     }
                 }
-                cosineScore.Add(vector.Key, score);
+                cosineScore.Add(page.Id, score);
             }
 
             return cosineScore;

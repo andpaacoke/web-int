@@ -16,7 +16,11 @@ namespace web_crawler
             {
                 Console.WriteLine("Please write a query: ");
                 string userQuery = Console.ReadLine();
-                wc.HandleUserQuery(userQuery);
+                if(userQuery != "") {
+                    wc.HandleUserQuery(userQuery);
+                } else {
+                    Console.WriteLine("Query must contain words!");
+                }
             }
 
             
